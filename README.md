@@ -5,7 +5,7 @@ Lightweight C library for the creation of abstract syntax trees for arbitrary gr
 ```c
 #include "./jw_ast.h"
 
-int main ()
+int main (void)
 {
   jw_parser parser = jw_parser_new("./c.lexer", "./c.grammar", 0);
   jw_asn* ast = jw_ast_new(parser, "./test.c");
