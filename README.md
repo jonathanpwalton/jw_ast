@@ -3,7 +3,7 @@ Lightweight C library for the creation of abstract syntax trees for arbitrary gr
 
 ### Using the library
 
-Only the ```jw_ast.h``` and ```jw_ast.c``` files are required for use of this library. The other files in this repo are examples upon which you might consider basing your grammars and lexers. The quickstart section loads these examples and prints the AST for the ```test.c``` file.
+Only the ```jw_ast.h``` and ```jw_ast.c``` files are required for use of this library. The other files in this repo are examples upon which you might consider basing your grammars and lexers. The quickstart section loads these examples and prints the AST for the ```test.c``` file. (Please note: the grammar and lexer for C are incomplete, and meant merely as an example of how to create a grammar using this library. The grammar upon which this C grammar was based can be found [here](https://cs.wmich.edu/~gupta/teaching/cs4850/sumII06/The%20syntax%20of%20C%20in%20Backus-Naur%20form.htm).)
 
 ### Quick start
 ```c
