@@ -125,3 +125,5 @@ Grammar creation is a nuanced topic but this parser relies on a couple of assump
 ### Limitations
 
 Currently, the error-handling of failed rules is rather limited. If the current rule exists within a larger structure of rules and fails, the topmost rule will fail (unless that current rule is a ```maybe``` (e.g. ```<word>?```) or ```many``` (e.g. ```<word>*```) rule).
+
+As mentioned above, the regular expressions supported in lexer definitions is naive. For example, the ```-``` character is unsupported, as are any characters requiring escaping.
