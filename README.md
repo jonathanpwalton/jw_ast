@@ -33,6 +33,14 @@ jw_parser jw_parser_new(const char* lexerPath, const char* grammarPath, size_t o
 void      jw_parser_free(jw_parser parser);
 ```
 
+**jw_parser_new options**
+
+```JW_AST_INDENT``` tokenizes whitespace at the beginning of lines as [indent] lexemes
+```JW_AST_NEWLINE``` tokenizes newline characters
+```JW_AST_CHILDLESS_COMPRESSION``` compresses nodes that only have a single child which have no children
+```JW_AST_TOTAL_COMPRESSION``` compresses nodes that only have a single child
+```JW_AST_DEBUG``` prints the tokenization and parsing of files provided to ```jw_ast_new```
+
 The ```jw_ast_new``` function accepts a parser object as well as an input filepath, which determines which file will be parsed using the lexer and grammar defined at parser creation. Like with ```jw_parser_free```, ```jw_ast_free``` should only be called when the AST is no longer being traversed.
 
 ```c
