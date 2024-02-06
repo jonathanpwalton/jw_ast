@@ -363,7 +363,7 @@ static bool jw_grammar_definition_use(jw_lexemes lexemes, size_t* currentLexeme,
     printf(JW_SV_FMT": SUCCESS\n", JW_SV_ARG(def.name));
   }
 
-  return success;
+  return true;
 }
 
 static bool jw_grammar_rule_use(jw_lexemes lexemes, size_t* currentLexemeIndex, jw_grammar_definitions defs, jw_grammar_rule rule, jw_asn* result, size_t level, size_t options)
@@ -603,10 +603,7 @@ static jw_lexemes jw_tokenize_lexer(const char* path, const char* file)
       {
         jw_lexeme l =
         {
-          .kind = {
-            .data = "newline",
-            .length = 7
-          },
+          .kind = jw_csv("newline"),
           .value = {
             .data = "\n",
             .length = 1
@@ -637,10 +634,7 @@ static jw_lexemes jw_tokenize_lexer(const char* path, const char* file)
 
       jw_lexeme l =
       {
-        .kind = {
-          .data = "identifier",
-          .length = 10
-        },
+        .kind = jw_csv("identifier"),
         .value = {
           .data = &file[pos],
           .length = 0
@@ -675,10 +669,7 @@ static jw_lexemes jw_tokenize_lexer(const char* path, const char* file)
 
       jw_lexeme l =
       {
-        .kind = {
-          .data = "string",
-          .length = 10
-        },
+        .kind = jw_csv("string"),
         .value = {
           .data = &file[pos],
           .length = 0
@@ -712,10 +703,7 @@ static jw_lexemes jw_tokenize_lexer(const char* path, const char* file)
 
       jw_lexeme l =
       {
-        .kind = {
-          .data = "regex",
-          .length = 5
-        },
+        .kind = jw_csv("regex"),
         .value = {
           .data = &file[pos],
           .length = 0
@@ -744,22 +732,19 @@ static jw_lexemes jw_tokenize_lexer(const char* path, const char* file)
 
       if (file[pos] == '+')
       {
-        l.kind.data = "regex-more";
-        l.kind.length = 10;
+        l.kind = jw_csv("regex-more");
         pos++;
         col++;
       }
       else if (file[pos] == '?')
       {
-        l.kind.data = "regex-maybe";
-        l.kind.length = 11;
+        l.kind = jw_csv("regex-maybe");
         pos++;
         col++;
       }
       else if (file[pos] == '*')
       {
-        l.kind.data = "regex-many";
-        l.kind.length = 10;
+        l.kind = jw_csv("regex-many");
         pos++;
         col++;
       }
