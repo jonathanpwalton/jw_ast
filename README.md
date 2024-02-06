@@ -28,21 +28,21 @@ All usage of this library is through a handful of functions defined in ```jw_ast
 
 The ```jw_parser_new``` function accepts a paths to the lexer and grammar that define this parser, as well as a bitfield with which certain options can be toggled. The ```jw_parser_free``` function should only be called when the syntax tree is no longer being used, as all values in the tree are merely views into the data loaded in this function and the AST creation function.
 
-```
+```c
 jw_parser jw_parser_new(const char* lexerPath, const char* grammarPath, size_t optionsBitfield);
 void      jw_parser_free(jw_parser parser);
 ```
 
 The ```jw_ast_new``` function accepts a parser object as well as an input filepath, which determines which file will be parsed using the lexer and grammar defined at parser creation. Like with ```jw_parser_free```, ```jw_ast_free``` should only be called when the AST is no longer being traversed.
 
-```
+```c
 jw_asn* jw_ast_new(jw_parser parser, const char* inputPath);
 void    jw_ast_free(jw_asn* ast);
 ```
 
 The functions below allow for inspection of the tree's nodes and their data. Children may be accessed through these functions, and inspected using the same set of functions.
 
-```
+```c
 void    jw_asn_print(jw_asn* node, size_t baseIndent);
 size_t  jw_asn_children_count(jw_asn* node);
 jw_asn* jw_asn_child(jw_asn* node, size_t index);
