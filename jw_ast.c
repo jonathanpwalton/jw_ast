@@ -223,6 +223,33 @@ jw_asn* jw_ast_new(jw_parser parser, const char* inputPath)
   return result;
 }
 
+void jw_asn_print(jw_asn* node, size_t level)
+{
+  for (size_t i = 0; i < level; i++)
+  {
+    printf("  ");
+  }
+
+  printf(JW_SV_FMT, JW_SV_ARG(jw_asn_kind(node)));
+  if (jw_asn_value(node).data != NULL)
+  {
+    if (jw_sv_eq(jw_asn_value(node), "\n"))
+    {
+      printf(" (\\n)");
+    }
+    else
+    {
+      printf(" (" JW_SV_FMT ")", JW_SV_ARG(jw_asn_value(node)));
+    }
+  }
+  printf("\n");
+
+  for (size_t i = 0; i < jw_asn_children_count(node); i++)
+  {
+    jw_asn_print(jw_asn_child(node, i), level + 1);
+  }
+}
+
 static bool jw_grammar_rule_use(jw_lexemes lexemes, size_t* currentLexeme, jw_grammar_definitions defs, jw_grammar_rule rule, jw_asn* result, size_t level, size_t options);
 static bool jw_grammar_definition_use(jw_lexemes lexemes, size_t* currentLexeme, jw_grammar_definitions defs, jw_grammar_definition def, jw_asn* result, size_t level, size_t options)
 {

@@ -82,11 +82,12 @@ void      jw_parser_free(jw_parser parser);
 jw_asn* jw_ast_new(jw_parser parser, const char* inputPath);
 void    jw_ast_free(jw_asn* ast);
 
-size_t  jw_asn_children_count(jw_asn* asn);
-jw_asn* jw_asn_child(jw_asn* asn, size_t index);
-jw_sv   jw_asn_kind(jw_asn* asn);
-jw_sv   jw_asn_value(jw_asn* asn);
-jw_loc  jw_asn_location(jw_asn* asn);
+void    jw_asn_print(jw_asn* node, size_t baseIndent);
+size_t  jw_asn_children_count(jw_asn* node);
+jw_asn* jw_asn_child(jw_asn* node, size_t index);
+jw_sv   jw_asn_kind(jw_asn* node);
+jw_sv   jw_asn_value(jw_asn* node);
+jw_loc  jw_asn_location(jw_asn* node);
 
 #ifndef JW_DEFINE_MINMAX_
 #define JW_DEFINE_MINMAX_
