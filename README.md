@@ -11,7 +11,7 @@ Only the ```jw_ast.h``` and ```jw_ast.c``` files are required for use of this li
 
 int main (void)
 {
-  jw_parser parser = jw_parser_new("./c.lexer", "./c.grammar", 0);
+  jw_parser parser = jw_parser_new("./c.lexer", "./c.grammar", JW_AST_TOTAL_COMPRESSION);
   jw_asn* ast = jw_ast_new(parser, "./test.c");
 
   jw_asn_print(ast, 0);
@@ -35,7 +35,7 @@ void      jw_parser_free(jw_parser parser);
 
 **jw_parser_new options**
 
-```JW_AST_INDENT``` tokenizes whitespace at the beginning of lines as [indent] lexemes
+```JW_AST_INDENT``` tokenizes whitespace at the beginning of lines as ```[indent]``` lexemes
 
 ```JW_AST_NEWLINE``` tokenizes newline characters
 
