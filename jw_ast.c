@@ -381,6 +381,17 @@ static bool jw_grammar_definition_use(jw_lexemes lexemes, size_t* currentLexeme,
     {
       if (node.children.length == 1)
       {
+        if
+        (node.children.data[0].value.data != NULL &&
+          (
+           jw_sv_eq(node.children.data[0].kind, "lexeme-kind") ||
+           jw_sv_eq(node.children.data[0].kind, "lexeme-value")
+          )
+        )
+        {
+          node.children.data[0].kind = node.kind;
+        }
+        
         node = node.children.data[0];
       }
     }

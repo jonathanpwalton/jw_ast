@@ -31,7 +31,7 @@
   "signed"
   "unsigned"
   <struct-or-union-specifier>
-  [identifier]
+  <identifier>
 
 <struct-or-union-specifier>
   <struct-or-union> <struct-or-union-specifier-rhs>
@@ -200,10 +200,16 @@
   "->" <identifier>
 
 <primary-expression>
-  [identifier]
-  [number]
-  [string]
+  <identifier>
+  <number-constant>
+  <string-constant>
   "(" <expression> ")"
+
+<number-constant>
+  [number]
+
+<string-constant>
+  [string]
 
 <expression>
   <conditional-expression> <expression-rhs>*
