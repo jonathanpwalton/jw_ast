@@ -1,15 +1,54 @@
 # jw_ast
 Lightweight C library for the creation of abstract syntax trees for arbitrary grammars loosely based on Backus-Naur form.
 
+### Using the library
+
+Only the ```jw_ast.h``` and ```jw_ast.c``` files are required for use of this library. The other files in this repo are examples upon which you might consider basing your grammars and lexers. The quickstart section loads these examples and prints the AST for the ```test.c``` file. (Please note: the grammar and lexer for C are incomplete, and meant merely as an example of how to create a grammar using this library. The grammar upon which this C grammar was based can be found [here](https://cs.wmich.edu/~gupta/teaching/cs4850/sumII06/The%20syntax%20of%20C%20in%20Backus-Naur%20form.htm).)
+
 ### Quick start
 ```c
-jw_parser parser = jw_parser_new("path/to/lexer", "path/to/grammar", 0);
-jw_asn* ast = jw_ast_new(parser, "path/to/file/to/parse");
+#include "./jw_ast.h"
 
-jw_asn_print(ast, 0);
+int main (void)
+{
+  jw_parser parser = jw_parser_new("./c.lexer", "./c.grammar", 0);
+  jw_asn* ast = jw_ast_new(parser, "./test.c");
 
-jw_ast_free(ast);
-jw_parser_free(parser);
+  jw_asn_print(ast, 0);
+
+  jw_ast_free(ast);
+  jw_parser_free(parser);
+  return 0;
+}
+```
+
+### API Usage
+
+All usage of this library is through a handful of functions defined in ```jw_ast.h``` which primary allow for inspecting a node and its children.
+
+The ```jw_parser_new``` function accepts a paths to the lexer and grammar that define this parser, as well as a bitfield with which certain options can be toggled. The ```jw_parser_free``` function should only be called when the syntax tree is no longer being used, as all values in the tree are merely views into the data loaded in this function and the AST creation function.
+
+```c
+jw_parser jw_parser_new(const char* lexerPath, const char* grammarPath, size_t optionsBitfield);
+void      jw_parser_free(jw_parser parser);
+```
+
+The ```jw_ast_new``` function accepts a parser object as well as an input filepath, which determines which file will be parsed using the lexer and grammar defined at parser creation. Like with ```jw_parser_free```, ```jw_ast_free``` should only be called when the AST is no longer being traversed.
+
+```c
+jw_asn* jw_ast_new(jw_parser parser, const char* inputPath);
+void    jw_ast_free(jw_asn* ast);
+```
+
+The functions below allow for inspection of the tree's nodes and their data. Children may be accessed through these functions, and inspected using the same set of functions.
+
+```c
+void    jw_asn_print(jw_asn* node, size_t baseIndent);
+size_t  jw_asn_children_count(jw_asn* node);
+jw_asn* jw_asn_child(jw_asn* node, size_t index);
+jw_sv   jw_asn_kind(jw_asn* node);
+jw_sv   jw_asn_value(jw_asn* node);
+jw_loc  jw_asn_location(jw_asn* node);
 ```
 
 ### Lexer creation
@@ -97,7 +136,7 @@ This grammar will create a root node called ```book``` which is defined as one o
 **Creating purposeful grammars**
 
 Grammar creation is a nuanced topic but this parser relies on a couple of assumptions:
-1. No left-recursion. This means that a grammar definition must not include itself on the ***left*** side of its definition.
+1. No left-recursion. No definitions should contain themselves as the first element in a rule. (e.g. ```<expression> := <expression> + <expression>``` will fall into infinite recursion)
 2. Meaningful delimiting of nodes. The above grammar is missing a key aspect which delimits each chapter from the next. Without something (a ```grammar rule reference``` or a ```lexeme value or literal```) that delimits between chapters, who's to say which paragraph belongs to which chapter? To fix this problem, a chapter should include something that delimits it. This can be done in several ways, but an easy way would be to look for a ***lexeme literal*** with the value of ```CHAPTER``` followed by a ***lexeme*** with kind ```number```, as shown here:
 
    ```
