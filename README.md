@@ -1,6 +1,10 @@
 # jw_ast
 Lightweight C library for the creation of abstract syntax trees for arbitrary grammars loosely based on Backus-Naur form.
 
+### Using the library
+
+Only the ```jw_ast.h``` and ```jw_ast.c``` files are required for use of this library. The other files in this repo are examples upon which you might consider basing your grammars and lexers. The quickstart section loads these examples and prints the AST for the ```test.c``` file.
+
 ### Quick start
 ```c
 #include "./jw_ast.h"
