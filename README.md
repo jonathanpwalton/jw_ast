@@ -76,7 +76,7 @@ the Big dog + cat * Horse - zebra / ELEPHANT = tangerine
 
 ### Grammar creation
 
-Like the creation of a lexer, a grammar is defined in its own file and all rules are defined therein. No subsequent generalizations are made by this implementation. Rules are defined like lexemes, but with triangular brackets instead. ***It is important that the first definition within your grammar encompasses the entirety of a file.***
+Like the creation of a lexer, a grammar is defined in its own file and all rules are defined therein. No subsequent generalizations are made by this implementation. Rules are defined like lexemes, but with triangular brackets instead. ***It is important that the first definition within your grammar encompasses the entirety of a file. Parsing will fail if all lexemes are not consumed.***
 
 This grammar will create a root node called ```book``` which is defined as one or more ```chapter``` nodes. Each chapter node is thus made of one or more ```paragraph``` nodes. These nodes are in turn defined as one or more ```sentence``` nodes followed by a ```newline``` **lexeme**. Each sentence is one or more ```word``` **lexemes** followed by a ```.``` **lexeme literal**.
 
@@ -132,3 +132,21 @@ Grammar creation is a nuanced topic but this parser relies on a couple of assump
 Currently, the error-handling of failed rules is rather limited. If the current rule exists within a larger structure of rules and fails, the topmost rule will fail (unless that current rule is a ```maybe``` (e.g. ```<word>?```) or ```many``` (e.g. ```<word>*```) rule).
 
 As mentioned above, the regular expressions supported in lexer definitions is naive. For example, the ```-``` character is unsupported, as are any characters requiring escaping.
+
+Rule-precedence is defined strictly top-down. In effect, both lexer and grammar rules defined at the top have higher precedence, and so the ```[keyword]``` example from above would fail if placed below the ```[word]``` definition. ***Note:*** this does not mean that higher-level rules have higher **operator** precedence; operator precedence should follow a bottom-up approach where the highest-precedence operators follow those with less precedence, as shown here:
+
+```
+<expression>
+  <term> <expression-rhs>*
+
+<expression-rhs>
+  "+" <term>
+  "-" <term>
+
+<term>
+  [number] <term-rhs>*
+
+<term-rhs>
+  "*" [number]
+  "/" [number]
+```
