@@ -32,27 +32,6 @@ SOFTWARE.
 #include <stdio.h>
 #include <ctype.h>
 
-#define jw_max(a, b) (a > b ? a : b)
-
-#define typedef_array(Typename, Type)\
-  typedef struct Typename\
-  {\
-    Type* data;\
-    size_t length;\
-    size_t capacity;\
-  } Typename
-#define array_append(Array, Value)\
-  do\
-  { \
-    if (Array.capacity <= Array.length)\
-    {\
-      Array.capacity += jw_max(1, Array.capacity / 2);\
-      Array.data = realloc(Array.data, Array.capacity * sizeof(Value));\
-    }\
-    Array.data[Array.length++] = Value;\
-  } while(0)
-#define array_free(Array) free(Array.data)
-
 #define jw_error(...) do { printf("error: "); printf(__VA_ARGS__); printf("\n"); exit(1); } while(0)
 #define jw_assert(X, ...) if (!(X)) { jw_error(__VA_ARGS__); }
 #define jw_lexer_error(lexeme, ...) do { fprintf(stderr, JW_LOC_FMT ": error: ", JW_LOC_ARG(lexeme.location)); fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\n"); exit(1); } while(0)
@@ -64,21 +43,21 @@ typedef struct jw_lexeme_definition jw_lexeme_definition;
 typedef struct jw_lexeme            jw_lexeme;
 typedef struct jw_lexer*            jw_lexer;
 
-typedef_array(jw_regex, jw_char_limits);
-typedef_array(jw_lexeme_rules, jw_lexeme_rule);
-typedef_array(jw_lexeme_definitions, jw_lexeme_definition);
-typedef_array(jw_lexemes, jw_lexeme);
+jw_array_typedef(jw_regex, jw_char_limits);
+jw_array_typedef(jw_lexeme_rules, jw_lexeme_rule);
+jw_array_typedef(jw_lexeme_definitions, jw_lexeme_definition);
+jw_array_typedef(jw_lexemes, jw_lexeme);
 
 typedef struct jw_grammar_rule        jw_grammar_rule;
 typedef struct jw_grammar_definition  jw_grammar_definition;
 typedef struct jw_grammar*            jw_grammar;
 
-typedef_array(jw_grammar_rules, jw_grammar_rule);
-typedef_array(jw_grammar_ruleset, jw_grammar_rules);
-typedef_array(jw_grammar_definitions, jw_grammar_definition);
+jw_array_typedef(jw_grammar_rules, jw_grammar_rule);
+jw_array_typedef(jw_grammar_ruleset, jw_grammar_rules);
+jw_array_typedef(jw_grammar_definitions, jw_grammar_definition);
 
-typedef_array(jw_asns, jw_asn);
-typedef_array(jw_svs, jw_sv);
+jw_array_typedef(jw_asns, jw_asn);
+jw_array_typedef(jw_svs, jw_sv);
 
 typedef enum
 {
@@ -299,7 +278,7 @@ static bool jw_grammar_definition_use(jw_lexemes lexemes, size_t* currentLexeme,
           if (jw_grammar_rule_use(lexemes, currentLexeme, defs, rule, &child, level + 1, options))
           {
             startLexeme = *currentLexeme;
-            array_append(node.children, child);
+            jw_array_append(node.children, child);
           }
           else
           {
@@ -323,7 +302,7 @@ static bool jw_grammar_definition_use(jw_lexemes lexemes, size_t* currentLexeme,
             {
               iterations++;
               startLexeme = *currentLexeme;
-              array_append(node.children, child);
+              jw_array_append(node.children, child);
             }
             else
             {
@@ -494,7 +473,7 @@ static void jw_asn_free(jw_asn* asn)
     jw_asn_free(&asn->children.data[i]);
   }
 
-  array_free(asn->children);
+  jw_array_free(asn->children);
 }
 
 void jw_ast_free(jw_asn* ast)
@@ -566,7 +545,7 @@ static jw_regex jw_parse_regex(jw_sv regex)
         .min = a,
         .max = b
       };
-      array_append(result, limits);
+      jw_array_append(result, limits);
 
       i += 2;
     }
@@ -577,7 +556,7 @@ static jw_regex jw_parse_regex(jw_sv regex)
         .min = a,
         .max = a
       };
-      array_append(result, limits);
+      jw_array_append(result, limits);
     }
   }
 
@@ -639,7 +618,7 @@ static jw_lexemes jw_tokenize_lexer(const char* path, const char* file)
           }
         };
 
-        array_append(result, l);
+        jw_array_append(result, l);
       }
 
       pos++;
@@ -687,7 +666,7 @@ static jw_lexemes jw_tokenize_lexer(const char* path, const char* file)
 
       pos++;
       col++;
-      array_append(result, l);
+      jw_array_append(result, l);
     }
     else if (file[pos] == '\"')
     {
@@ -724,7 +703,7 @@ static jw_lexemes jw_tokenize_lexer(const char* path, const char* file)
       }
 
       pos++;
-      array_append(result, l);
+      jw_array_append(result, l);
     }
     else if (file[pos] == '/')
     {
@@ -785,7 +764,7 @@ static jw_lexemes jw_tokenize_lexer(const char* path, const char* file)
         col++;
       }
 
-      array_append(result, l);
+      jw_array_append(result, l);
     }
     else
     {
@@ -840,7 +819,7 @@ static jw_lexer jw_lexer_new(const char* path)
           jw_lexer_warn(path, "definition for "JW_SV_FMT" contains no rules", JW_SV_ARG(def.name));
         }
 
-        array_append(result->definitions, def);
+        jw_array_append(result->definitions, def);
         memset(&def, 0, sizeof(def));
       }
 
@@ -875,7 +854,7 @@ static jw_lexer jw_lexer_new(const char* path)
           subrule.string = file[pos].value;
           pos++;
 
-          array_append(rule.subrules, subrule);
+          jw_array_append(rule.subrules, subrule);
           continue;
         }
         else if (jw_is_lexeme_kind(file[pos], jw_csv("regex-more")))
@@ -884,7 +863,7 @@ static jw_lexer jw_lexer_new(const char* path)
           subrule.regex = jw_parse_regex(file[pos].value);
           pos++;
 
-          array_append(rule.subrules, subrule);
+          jw_array_append(rule.subrules, subrule);
           continue;
         }
         else if (jw_is_lexeme_kind(file[pos], jw_csv("regex-many")))
@@ -893,7 +872,7 @@ static jw_lexer jw_lexer_new(const char* path)
           subrule.regex = jw_parse_regex(file[pos].value);
           pos++;
 
-          array_append(rule.subrules, subrule);
+          jw_array_append(rule.subrules, subrule);
           continue;
         }
         else if (jw_is_lexeme_kind(file[pos], jw_csv("regex-maybe")))
@@ -902,7 +881,7 @@ static jw_lexer jw_lexer_new(const char* path)
           subrule.regex = jw_parse_regex(file[pos].value);
           pos++;
 
-          array_append(rule.subrules, subrule);
+          jw_array_append(rule.subrules, subrule);
           continue;
         }
         else if (jw_is_lexeme_kind(file[pos], jw_csv("regex")))
@@ -911,7 +890,7 @@ static jw_lexer jw_lexer_new(const char* path)
           subrule.regex = jw_parse_regex(file[pos].value);
           pos++;
 
-          array_append(rule.subrules, subrule);
+          jw_array_append(rule.subrules, subrule);
           continue;
         }
         else
@@ -925,11 +904,11 @@ static jw_lexer jw_lexer_new(const char* path)
 
       if (rule.subrules.length == 1)
       {
-        array_append(def.rules, rule.subrules.data[0]);
+        jw_array_append(def.rules, rule.subrules.data[0]);
       }
       else
       {
-        array_append(def.rules, rule);
+        jw_array_append(def.rules, rule);
       }
 
       continue;
@@ -945,7 +924,7 @@ static jw_lexer jw_lexer_new(const char* path)
       jw_lexer_warn(path, "definition for "JW_SV_FMT" contains no rules", JW_SV_ARG(def.name));
     }
 
-    array_append(result->definitions, def);
+    jw_array_append(result->definitions, def);
   }
 
   return result;
@@ -1074,7 +1053,7 @@ static jw_lexemes jw_lexer_use(jw_lexer lexer, const char* path, const char* con
           }
         };
 
-        array_append(result, l);
+        jw_array_append(result, l);
       }
 
       pos++;
@@ -1111,7 +1090,7 @@ static jw_lexemes jw_lexer_use(jw_lexer lexer, const char* path, const char* con
 
         if (content[pos] != '\n')
         {
-          array_append(result, l);
+          jw_array_append(result, l);
         }
       }
       else
@@ -1166,7 +1145,7 @@ static jw_lexemes jw_lexer_use(jw_lexer lexer, const char* path, const char* con
       pos++;
       col++;
       l.value.length++;
-      array_append(result, l);
+      jw_array_append(result, l);
     }
 
     bool found = false;
@@ -1195,7 +1174,7 @@ static jw_lexemes jw_lexer_use(jw_lexer lexer, const char* path, const char* con
               .col = col
             }
           };
-          array_append(result, l);
+          jw_array_append(result, l);
 
           pos += used;
           col += used;
@@ -1233,8 +1212,8 @@ static void jw_lexeme_rule_free(jw_lexeme_rule rule)
     jw_lexeme_rule_free(rule.subrules.data[i]);
   }
 
-  array_free(rule.subrules);
-  array_free(rule.regex);
+  jw_array_free(rule.subrules);
+  jw_array_free(rule.regex);
 }
 
 static void jw_lexeme_definition_free(jw_lexeme_definition def)
@@ -1244,7 +1223,7 @@ static void jw_lexeme_definition_free(jw_lexeme_definition def)
     jw_lexeme_rule_free(def.rules.data[i]);
   }
 
-  array_free(def.rules);
+  jw_array_free(def.rules);
 }
 
 static void jw_lexer_free(jw_lexer lexer)
@@ -1254,7 +1233,7 @@ static void jw_lexer_free(jw_lexer lexer)
     jw_lexeme_definition_free(lexer->definitions.data[i]);
   }
 
-  array_free(lexer->definitions);
+  jw_array_free(lexer->definitions);
   free(lexer);
 }
 
@@ -1284,7 +1263,7 @@ static jw_lexemes jw_tokenize_grammar(const char* path, const char* data)
           }
         };
 
-        array_append(result, l);
+        jw_array_append(result, l);
       }
 
       pos++;
@@ -1321,7 +1300,7 @@ static jw_lexemes jw_tokenize_grammar(const char* path, const char* data)
 
         if (data[pos] != '\n')
         {
-          array_append(result, l);
+          jw_array_append(result, l);
         }
       }
       else
@@ -1386,7 +1365,7 @@ static jw_lexemes jw_tokenize_grammar(const char* path, const char* data)
         col++;
       }
 
-      array_append(result, l);
+      jw_array_append(result, l);
 
       continue;
     }
@@ -1423,7 +1402,7 @@ static jw_lexemes jw_tokenize_grammar(const char* path, const char* data)
       }
 
       pos++;
-      array_append(result, l);
+      jw_array_append(result, l);
 
       continue;
     }
@@ -1461,7 +1440,7 @@ static jw_lexemes jw_tokenize_grammar(const char* path, const char* data)
 
       pos++;
       col++;
-      array_append(result, l);
+      jw_array_append(result, l);
 
       continue;
     }
@@ -1525,7 +1504,7 @@ static jw_grammar jw_grammar_new(const char* path)
             };
             pos++;
 
-            array_append(rules, rule);
+            jw_array_append(rules, rule);
             continue;
           }
 
@@ -1539,7 +1518,7 @@ static jw_grammar jw_grammar_new(const char* path)
             };
             pos++;
 
-            array_append(rules, rule);
+            jw_array_append(rules, rule);
             continue;
           }
 
@@ -1553,7 +1532,7 @@ static jw_grammar jw_grammar_new(const char* path)
             };
             pos++;
 
-            array_append(rules, rule);
+            jw_array_append(rules, rule);
             continue;
           }
 
@@ -1567,7 +1546,7 @@ static jw_grammar jw_grammar_new(const char* path)
             };
             pos++;
 
-            array_append(rules, rule);
+            jw_array_append(rules, rule);
             continue;
           }
 
@@ -1581,7 +1560,7 @@ static jw_grammar jw_grammar_new(const char* path)
             };
             pos++;
 
-            array_append(rules, rule);
+            jw_array_append(rules, rule);
             continue;
           }
 
@@ -1595,7 +1574,7 @@ static jw_grammar jw_grammar_new(const char* path)
             };
             pos++;
 
-            array_append(rules, rule);
+            jw_array_append(rules, rule);
             continue;
           }
 
@@ -1605,7 +1584,7 @@ static jw_grammar jw_grammar_new(const char* path)
         jw_lexer_expect(file[pos], "\n");
         pos++;
 
-        array_append(def.ruleset, rules);
+        jw_array_append(def.ruleset, rules);
         continue;
       }
 
@@ -1614,7 +1593,7 @@ static jw_grammar jw_grammar_new(const char* path)
         jw_lexer_warn(path, "definition for "JW_SV_FMT" contains no rules", JW_SV_ARG(def.name));
       }
 
-      array_append(result->definitions, def);
+      jw_array_append(result->definitions, def);
       continue;
     }
 
@@ -1657,9 +1636,9 @@ static void jw_grammar_definition_free(jw_grammar_definition def)
 {
   for (size_t i = 0; i < def.ruleset.length; i++)
   {
-    array_free(def.ruleset.data[i]);
+    jw_array_free(def.ruleset.data[i]);
   }
-  array_free(def.ruleset);
+  jw_array_free(def.ruleset);
 }
 
 static void jw_grammar_free(jw_grammar grammar)
@@ -1668,7 +1647,7 @@ static void jw_grammar_free(jw_grammar grammar)
   {
     jw_grammar_definition_free(grammar->definitions.data[i]);
   }
-  array_free(grammar->definitions);
+  jw_array_free(grammar->definitions);
   free(grammar->data);
   free(grammar);
 }
