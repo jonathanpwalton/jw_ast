@@ -98,8 +98,7 @@ This grammar will create a root node called ```book``` which is defined as one o
 
 Grammar creation is a nuanced topic but this parser relies on a couple of assumptions:
 1. No left-recursion. This means that a grammar definition must not include itself on the ***left*** side of its definition.
-2. Meaningful delimiting of nodes. The above grammar is missing a key aspect which delimits each chapter from the next. Without something (a ```grammar rule reference``` or a ```lexeme value or literal```) that delimits between chapters, who's to say which paragraph belongs to which chapter?
-   a. To fix this problem, a chapter should include something that delimits it. This can be done in several ways, but an easy way would be to look for a ***lexeme literal*** with the value of ```Chapter``` followed by a ***lexeme*** with kind ```number```, as shown here:
+2. Meaningful delimiting of nodes. The above grammar is missing a key aspect which delimits each chapter from the next. Without something (a ```grammar rule reference``` or a ```lexeme value or literal```) that delimits between chapters, who's to say which paragraph belongs to which chapter? To fix this problem, a chapter should include something that delimits it. This can be done in several ways, but an easy way would be to look for a ***lexeme literal*** with the value of ```Chapter``` followed by a ***lexeme*** with kind ```number```, as shown here:
 
    ```
    <book>
