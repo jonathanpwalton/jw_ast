@@ -3,13 +3,19 @@ Lightweight C library for the creation of abstract syntax trees for arbitrary gr
 
 ### Quick start
 ```c
-jw_parser parser = jw_parser_new("path/to/lexer", "path/to/grammar", 0);
-jw_asn* ast = jw_ast_new(parser, "path/to/file/to/parse");
+#include "./jw_ast.h"
 
-jw_asn_print(ast, 0);
+int main ()
+{
+  jw_parser parser = jw_parser_new("./c.lexer", "./c.grammar", 0);
+  jw_asn* ast = jw_ast_new(parser, "./test.c");
 
-jw_ast_free(ast);
-jw_parser_free(parser);
+  jw_asn_print(ast, 0);
+
+  jw_ast_free(ast);
+  jw_parser_free(parser);
+  return 0;
+}
 ```
 
 ### Lexer creation
