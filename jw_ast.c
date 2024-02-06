@@ -375,9 +375,22 @@ static bool jw_grammar_definition_use(jw_lexemes lexemes, size_t* currentLexeme,
     return false;
   }
 
-  if (node.children.length == 1 && node.children.data[0].children.length == 0)
+  if (!jw_sv_eq_sv(def.name, defs.data[0].name) && (options & JW_AST_CHILDLESS_COMPRESSION || options & JW_AST_TOTAL_COMPRESSION))
   {
-    node = node.children.data[0];
+    if (options & JW_AST_TOTAL_COMPRESSION)
+    {
+      if (node.children.length == 1)
+      {
+        node = node.children.data[0];
+      }
+    }
+    else
+    {
+      if (node.children.length == 1 && node.children.data[0].children.length == 0)
+      {
+        node = node.children.data[0];
+      }
+    }
   }
   *result = node;
 
