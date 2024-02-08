@@ -641,15 +641,27 @@ static char* jw_file_read(const char* path)
   FILE* file = fopen(path, "r");
   jw_assert(file != NULL, "failed to open file '%s'", path);
 
-  fseek(file, 0, SEEK_END);
-  size_t size = (size_t) ftell(file);
-  fseek(file, 0, SEEK_SET);
-  jw_assert(size != 0, "failed to read anything from file '%s'", path);
+  static const size_t INITIAL_SIZE = 2048;
+  char* data = calloc(INITIAL_SIZE, sizeof(char));
+  size_t size = 0;
+  size_t capacity = INITIAL_SIZE;
 
-  char* data = calloc(size, sizeof(char));
-  fread(data, sizeof(char), size, file);
+  char line[INITIAL_SIZE];
+  while (fgets(line, INITIAL_SIZE, file))
+  {
+    size_t lineSize = strlen(line);
 
+    while (size + lineSize > capacity)
+    {
+      capacity *= 2;
+      data = realloc(data, capacity);
+    }
+
+    memcpy(&data[size], line, lineSize);
+    size += lineSize;
+  }
   fclose(file);
+  data = realloc(data, size);
   return data;
 }
 
@@ -1514,6 +1526,7 @@ static jw_lexemes jw_tokenize_grammar(const char* path, const char* data)
       }
 
       pos++;
+      col++;
       jw_array_append(result, l);
 
       continue;
@@ -1557,7 +1570,18 @@ static jw_lexemes jw_tokenize_grammar(const char* path, const char* data)
       continue;
     }
 
-    fprintf(stderr, "%s:%zu:%zu: error: out-of-context character '%c'\n", path, row, col, data[pos]);
+    if (data[pos] == 0)
+    {
+      break;
+    }
+
+    if (data[pos] == 13)
+    {
+      pos++;
+      continue;
+    }
+
+    fprintf(stderr, "%s:%zu:%zu: error: out-of-context character '%c' (%s)\n", path, row, col, data[pos], &data[pos]);
     exit(1);
   }
 
