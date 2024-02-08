@@ -3,7 +3,7 @@ Lightweight C library for the creation of abstract syntax trees for arbitrary gr
 
 ### Using the library
 
-Only the ```jw_ast.h``` and ```jw_ast.c``` files are required for use of this library. The other files in this repo are examples upon which you might consider basing your grammars and lexers. The quickstart section loads these examples and prints the AST for the ```test.c``` file. (Please note: the grammar and lexer for C are incomplete, and meant merely as an example of how to create a grammar using this library. The grammar upon which this C grammar was based can be found [here](https://cs.wmich.edu/~gupta/teaching/cs4850/sumII06/The%20syntax%20of%20C%20in%20Backus-Naur%20form.htm).)
+Including ```jw_ast.h``` and compiling against ```jw_ast.c``` is all that is required for use of this library. The other files in this repo are examples upon which you might consider basing your grammars and lexers. The quickstart section loads these examples and prints the AST for the ```test.c``` file. (Please note: the grammar and lexer for C are incomplete, and meant merely as an example of how to create a grammar using this library. The grammar upon which this C grammar was based can be found [here](https://cs.wmich.edu/~gupta/teaching/cs4850/sumII06/The%20syntax%20of%20C%20in%20Backus-Naur%20form.htm) - notice how examples of left recursion in the original were reworked in ```c.grammar```)
 
 ### Quick start
 ```c
@@ -152,7 +152,14 @@ This grammar will create a root node called ```book``` which is defined as one o
 **Creating purposeful grammars**
 
 Grammar creation is a nuanced topic but this parser relies on a couple of assumptions:
-1. No left-recursion. No definitions should contain themselves as the first element in a rule. (e.g. ```<expression> := <expression> + <expression>``` will fall into infinite recursion)
+1. No left-recursion. No definitions should contain themselves as the first element in a rule. For example, the definition below would fall into infinite recursion. To learn how to avoid this and to adapt any left-recursive scenario, considering exploring [this resource](https://www.booleanworld.com/building-recursive-descent-parsers-definitive-guide/), which primarily discusses building recursive decent parsers yourself, but is also a nice and simple primer on properly defining grammar rules.
+    
+    ```
+    <expression>
+        <expression> "+" <expression>
+        <expression> "-" <expression>
+    ```
+
 2. Meaningful delimiting of nodes. The above grammar is missing a key aspect which delimits each chapter from the next. Without something (a ```grammar rule reference``` or a ```lexeme value or literal```) that delimits between chapters, who's to say which paragraph belongs to which chapter? To fix this problem, a chapter should include something that delimits it. This can be done in several ways, but an easy way would be to look for a ***lexeme literal*** with the value of ```CHAPTER``` followed by a ***lexeme*** with kind ```number```, as shown here:
 
    ```
