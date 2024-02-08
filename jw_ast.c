@@ -256,7 +256,7 @@ jw_asn* jw_ast_new(jw_parser parser, const char* inputPath)
       }
       fprintf(stderr, "\n");
     }
-    else if (parser->options & JW_AST_LAST_FURTHEST_FAILURE && furthestFailures.length > 1)
+    else if (parser->options & JW_AST_LAST_FURTHEST_FAILURE && furthestFailures.length >= 1)
     {
       fprintf(stderr, JW_LOC_FMT": error: %s\n\n", JW_LOC_ARG(furthestFailures.data[furthestFailures.length - 1].location), furthestFailures.data[furthestFailures.length - 1].message);
     }

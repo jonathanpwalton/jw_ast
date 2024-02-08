@@ -45,6 +45,10 @@ void      jw_parser_free(jw_parser parser);
 
 ```JW_AST_DEBUG``` prints the tokenization and parsing of files provided to ```jw_ast_new```
 
+```JW_AST_FURTHEST_FAILURES``` prints all failures during parsing that happened furthest into the file by row and column
+
+```JW_AST_LAST_FURTHEST_FAILURE``` prints only the last failure during parsing that happened furthest into the file by row and column
+
 The ```jw_ast_new``` function accepts a parser object as well as an input filepath, which determines which file will be parsed using the lexer and grammar defined at parser creation. Like with ```jw_parser_free```, ```jw_ast_free``` should only be called when the AST is no longer being traversed.
 
 ```c
