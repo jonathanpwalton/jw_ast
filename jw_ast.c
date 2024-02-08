@@ -59,6 +59,10 @@ jw_array_typedef(jw_grammar_definitions, jw_grammar_definition);
 jw_array_typedef(jw_asns, jw_asn);
 jw_array_typedef(jw_svs, jw_sv);
 
+typedef struct jw_error_message jw_error_message;
+
+jw_array_typedef(jw_error_messages, jw_error_message);
+
 typedef enum
 {
   eLexemeRuleUndefined = 0,
@@ -155,6 +159,12 @@ struct jw_asn
   jw_loc  location;
 };
 
+struct jw_error_message
+{
+  jw_loc location;
+  char* message;
+};
+
 static char*        jw_file_read(const char* path);
 
 static jw_regex     jw_parse_regex(jw_sv regex);
@@ -172,7 +182,7 @@ static jw_lexemes   jw_tokenize_grammar(const char* path, const char* data);
 static jw_grammar   jw_grammar_new(const char* path);
 static void         jw_grammar_free(jw_grammar grammar);
 
-static bool         jw_grammar_definition_use(jw_lexemes lexemes, size_t* currentLexeme, jw_grammar_definitions defs, jw_grammar_definition def, jw_asn* result, size_t level, size_t options);
+static bool         jw_grammar_definition_use(jw_lexemes lexemes, size_t* currentLexeme, jw_grammar_definitions defs, jw_grammar_definition def, jw_asn* result, size_t level, size_t options, jw_error_messages* errors);
 
 jw_parser jw_parser_new(const char* lexerPath, const char* grammarPath, size_t options)
 {
@@ -210,14 +220,61 @@ jw_asn* jw_ast_new(jw_parser parser, const char* inputPath)
       printf("\n");
     }
   }
-
+  
+  jw_error_messages errors = {0};
+  jw_error_messages furthestFailures = {0};
   jw_asn* result = calloc(1, sizeof(*result));
   result->data = inputData;
 
+  bool failure = false;
   size_t currentLexeme = 0;
-  if (!jw_grammar_definition_use(lexemes, &currentLexeme, defs, defs.data[0], result, 0, parser->options) || currentLexeme != lexemes.length)
+  if (!jw_grammar_definition_use(lexemes, &currentLexeme, defs, defs.data[0], result, 0, parser->options, &errors) || currentLexeme != lexemes.length)
   {
-    jw_error(JW_LOC_FMT": failed to create new abstract syntax tree for %s", JW_LOC_ARG(lexemes.data[currentLexeme].location), inputPath);
+    size_t maxRow = 0, maxCol = 0;
+    for (size_t i = 0; i < errors.length; i++)
+    {
+      jw_error_message msg = errors.data[i];
+
+      if (msg.location.row == maxRow && msg.location.col == maxCol)
+      {
+        jw_array_append(furthestFailures, msg);
+      }
+      else if (msg.location.row > maxRow || (msg.location.row == maxRow && msg.location.col > maxCol))
+      {
+        maxRow = msg.location.row;
+        maxCol = msg.location.col;
+        furthestFailures.length = 0;
+        jw_array_append(furthestFailures, msg);
+      }
+    }
+
+    if (parser->options & JW_AST_FURTHEST_FAILURES)
+    {
+      for (size_t i = 0; i < furthestFailures.length; i++)
+      {
+        fprintf(stderr, JW_LOC_FMT": error: %s\n", JW_LOC_ARG(furthestFailures.data[i].location), furthestFailures.data[i].message);
+      }
+      fprintf(stderr, "\n");
+    }
+    else if (parser->options & JW_AST_LAST_FURTHEST_FAILURE && furthestFailures.length > 1)
+    {
+      fprintf(stderr, JW_LOC_FMT": error: %s\n\n", JW_LOC_ARG(furthestFailures.data[furthestFailures.length - 1].location), furthestFailures.data[furthestFailures.length - 1].message);
+    }
+
+    failure = true;
+  }
+
+  for (size_t i = 0; i < errors.length; i++)
+  {
+    free(errors.data[i].message);
+  }
+  jw_array_free(errors);
+  jw_array_free(furthestFailures);
+
+  if (failure)
+  {
+    fprintf(stderr, JW_LOC_FMT": error: failed to create ast for %s\n", JW_LOC_ARG(lexemes.data[currentLexeme].location), inputPath);
+    exit(1);
   }
 
   return result;
@@ -250,8 +307,8 @@ void jw_asn_print(jw_asn* node, size_t level)
   }
 }
 
-static bool jw_grammar_rule_use(jw_lexemes lexemes, size_t* currentLexeme, jw_grammar_definitions defs, jw_grammar_rule rule, jw_asn* result, size_t level, size_t options);
-static bool jw_grammar_definition_use(jw_lexemes lexemes, size_t* currentLexeme, jw_grammar_definitions defs, jw_grammar_definition def, jw_asn* result, size_t level, size_t options)
+static bool jw_grammar_rule_use(jw_lexemes lexemes, size_t* currentLexeme, jw_grammar_definitions defs, jw_grammar_rule rule, jw_asn* result, size_t level, size_t options, jw_error_messages* errors);
+static bool jw_grammar_definition_use(jw_lexemes lexemes, size_t* currentLexeme, jw_grammar_definitions defs, jw_grammar_definition def, jw_asn* result, size_t level, size_t options, jw_error_messages* errors)
 {
   if (options & JW_AST_DEBUG)
   {
@@ -302,7 +359,7 @@ static bool jw_grammar_definition_use(jw_lexemes lexemes, size_t* currentLexeme,
         case eGrammarRuleModMaybe:
         case eGrammarRuleUnmodified:
         {
-          if (jw_grammar_rule_use(lexemes, currentLexeme, defs, rule, &child, level + 1, options))
+          if (jw_grammar_rule_use(lexemes, currentLexeme, defs, rule, &child, level + 1, options, errors))
           {
             startLexeme = *currentLexeme;
             jw_array_append(node.children, child);
@@ -325,7 +382,7 @@ static bool jw_grammar_definition_use(jw_lexemes lexemes, size_t* currentLexeme,
           size_t iterations = 0;
           while (true)
           {
-            if (jw_grammar_rule_use(lexemes, currentLexeme, defs, rule, &child, level + 1, options))
+            if (jw_grammar_rule_use(lexemes, currentLexeme, defs, rule, &child, level + 1, options, errors))
             {
               iterations++;
               startLexeme = *currentLexeme;
@@ -417,7 +474,7 @@ static bool jw_grammar_definition_use(jw_lexemes lexemes, size_t* currentLexeme,
   return true;
 }
 
-static bool jw_grammar_rule_use(jw_lexemes lexemes, size_t* currentLexemeIndex, jw_grammar_definitions defs, jw_grammar_rule rule, jw_asn* result, size_t level, size_t options)
+static bool jw_grammar_rule_use(jw_lexemes lexemes, size_t* currentLexemeIndex, jw_grammar_definitions defs, jw_grammar_rule rule, jw_asn* result, size_t level, size_t options, jw_error_messages* errors)
 {
   if (*currentLexemeIndex >= lexemes.length)
   {
@@ -455,7 +512,7 @@ static bool jw_grammar_rule_use(jw_lexemes lexemes, size_t* currentLexemeIndex, 
           {
             printf("FOUND DEFINITION\n");
           }
-          return jw_grammar_definition_use(lexemes, currentLexemeIndex, defs, defs.data[i], result, level + 1, options);
+          return jw_grammar_definition_use(lexemes, currentLexemeIndex, defs, defs.data[i], result, level + 1, options, errors);
         }
       }
 
@@ -472,6 +529,15 @@ static bool jw_grammar_rule_use(jw_lexemes lexemes, size_t* currentLexemeIndex, 
         {
           printf("FAILURE\n");
         }
+
+        char* buffer = calloc(100, sizeof(char));
+        sprintf(buffer, "expected '"JW_SV_FMT"' but found '"JW_SV_FMT"'", JW_SV_ARG(rule.string), JW_SV_ARG(currentLexeme.value));
+        jw_error_message error = {
+          .location = currentLexeme.location,
+          .message = buffer
+        };
+        jw_array_append(*errors, error);
+
         return false;
       }
 
@@ -495,6 +561,15 @@ static bool jw_grammar_rule_use(jw_lexemes lexemes, size_t* currentLexemeIndex, 
         {
           printf("FAILURE\n");
         }
+
+        char* buffer = calloc(100, sizeof(char));
+        sprintf(buffer, "expected '"JW_SV_FMT"' but found '"JW_SV_FMT"'", JW_SV_ARG(rule.string), JW_SV_ARG(currentLexeme.kind));
+        jw_error_message error = {
+          .location = currentLexeme.location,
+          .message = buffer
+        };
+        jw_array_append(*errors, error);
+
         return false;
       }
 

@@ -71,6 +71,8 @@ typedef enum
   JW_AST_CHILDLESS_COMPRESSION  = 0x4,
   JW_AST_TOTAL_COMPRESSION      = 0x8,
   JW_AST_DEBUG                  = 0x10,
+  JW_AST_FURTHEST_FAILURES      = 0x20,
+  JW_AST_LAST_FURTHEST_FAILURE  = 0x40,
 } JW_AST_OPTIONS_ENUM;
 
 typedef struct jw_parser* jw_parser;
@@ -113,15 +115,15 @@ jw_loc  jw_asn_location(jw_asn* node);
 #define jw_array_append(arr, val)\
   do\
 {\
-  if (arr.capacity <= arr.length)\
+  if ((arr).capacity <= (arr).length)\
   {\
-    arr.capacity += jw_max(1, arr.capacity / 2);\
-    arr.data = realloc(arr.data, arr.capacity * sizeof(val));\
+    (arr).capacity += jw_max(1, (arr).capacity / 2);\
+    (arr).data = realloc((arr).data, (arr).capacity * sizeof(val));\
   }\
-  arr.data[arr.length++] = val;\
+  (arr).data[(arr).length++] = val;\
 } while(0)
 
-#define jw_array_free(arr) free(arr.data)
+#define jw_array_free(arr) free((arr).data)
 
 #endif //JW_DEFINE_ARRAY_
 
