@@ -1182,6 +1182,7 @@ static jw_lexemes jw_lexer_use(jw_lexer lexer, const char* path, const char* con
       col++;
       l.value.length++;
       jw_array_append(result, l);
+      continue;
     }
 
     bool found = false;
