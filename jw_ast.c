@@ -647,7 +647,7 @@ static char* jw_file_read(const char* path)
   size_t capacity = INITIAL_SIZE;
 
   char line[INITIAL_SIZE];
-  while (fgets(line, INITIAL_SIZE, file))
+  while (fgets(line, (int) INITIAL_SIZE, file))
   {
     size_t lineSize = strlen(line);
 
