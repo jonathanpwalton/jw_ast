@@ -651,17 +651,22 @@ static char* jw_file_read(const char* path)
   {
     size_t lineSize = strlen(line);
 
-    while (size + lineSize > capacity)
+    if (lineSize > 0)
     {
-      capacity *= 2;
-      data = realloc(data, capacity);
-    }
+      while (size + lineSize > capacity)
+      {
+        capacity *= 2;
+        data = realloc(data, capacity);
+      }
 
-    memcpy(&data[size], line, lineSize);
-    size += lineSize;
+      memcpy(&data[size], line, lineSize);
+      size += lineSize;
+    }
   }
   fclose(file);
-  data = realloc(data, size);
+  data = realloc(data, size + 2);
+  data[size] = '\n';
+  data[size + 1] = 0;
   return data;
 }
 
